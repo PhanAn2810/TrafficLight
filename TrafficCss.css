@@ -1,0 +1,28 @@
+.RedLight{
+    background-color: red;
+    width: 100px;
+    height: 100px;
+    display:block;
+    border-radius: 50%;
+}
+.GreenLight{
+    background-color: green;
+    width: 100px;
+    height: 100px;
+    display:block;
+    border-radius: 50%;
+}
+.YellowLight{
+    background-color: yellow;
+    width: 100px;
+    height: 100px;
+    display:block;
+    border-radius: 50%;
+}
+.GreyLight{
+    background-color: gray;
+    width: 100px;
+    height: 100px;
+    display:block;
+    border-radius: 50%;
+}

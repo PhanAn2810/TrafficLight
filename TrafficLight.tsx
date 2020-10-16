@@ -1,180 +1,140 @@
 import * as React from "react";
-import Circle from '../Circle';
-const colors={
-    red:{
-        backgroundColor:"#ff0000"
-    },
-    yellow:{
-        backgroundColor:"#ffff00"
-    },
-    green:{
-        backgroundColor:"#00ff00"
-    },
-    grey:{
-        backgroundColor:"#999999"
-    }
-};
-export default class TrafficLight extends React.Component<any, any>{
+import './TrafficCss.css'
+import {View} from "react-native";
+
+export const GREEN = "GREEN";
+export const RED = "RED";
+export const YELLOW = "YELLOW";
+
+interface TrafficLightState {
+    listStatus: Array<boolean>,
+    time: number,
+}
+
+const TIME=[10,8,2];// den do=10, red=8, vang =2
+export default class TrafficLight extends React.Component<{}, TrafficLightState> {
+    index: number = 0;
+
     constructor(props) {
         super(props);
         this.state = {
-            red:colors.red,
-            yellow:colors.yellow,
-            green:colors.green,
-            next:'red'
-        }
+            time: 10,
+            listStatus: [true, false, false]
+        };
+        this._changeColor = this._changeColor.bind(this)
     }
 
-    ChangeRedtoGreen=()=>{
-        switch (this.state.next) {
-            case "green":
-                this.setState({
-                    red: colors.grey,
-                    yellow: colors.grey,
-                    green: colors.green,
-                    next: 'yellow'
 
-                });
-                break;
-
-            case "red":
-                this.setState({
-                    red: colors.red,
-                    yellow: colors.grey,
-                    green: colors.grey,
-                    next: 'green'
-                });
-                break;
-            case "yellow":
-                this.setState({
-                    red: colors.grey,
-                    yellow: colors.yellow,
-                    green: colors.grey,
-                    next: 'red'
-                });
-                break;
-        }
-    }
-
-    repeatingFunc = ()=>{
-
-        this.ChangeRedtoGreen();
-
-        if (this.state.red == colors.red){
-            setTimeout(this.repeatingFunc, 10000);
-        }else if (this.state.green == colors.green){
-            setTimeout(this.repeatingFunc, 8000);
-        }else if(this.state.yellow == colors.yellow){
-            setTimeout(this.repeatingFunc, 2000);
-        }
-
-    }
-    componentDidMount() {
-        // setInterval(() => {
-        //     this.ChangeRedtoGreen();
-        // }, 2000)
-
-        this.repeatingFunc();
-
-    }
-
-    render(){
+    render() {
+        let listStatus = this.state.listStatus;
         return (
-            <>
-                <div>Traffic Light</div>
-                <Time
-                    red={this.state.red}
-                    green={this.state.green}
-                    yellow = {this.state.yellow}
-                />
+            <View>
+                <Timer time={this.state.time} signalReturn={this._changeColor}/>
+                <RedLight isLightOn={listStatus[0]}/>
+                <GreenLight isLightOn={listStatus[1]}/>
+                <YellowLight isLightOn={listStatus[2]}/>
+            </View>
+        )
+    }
 
-                <Light
-                    red={this.state.red}
-                    green={this.state.green}
-                    yellow = {this.state.yellow}
-                />
-            </>
-        );
+    _changeColor() {
+        //red:10s
+        //green:8s
+        //yellow:2s
+        switch (this.state.time)
+        {
+            case TIME[0] :
+                this.setState({time:8, listStatus: [false, true, false]});
+                break;
+            case TIME[1]:
+                this.setState({time: 2, listStatus: [false, false,true]});
+                break;
+
+        }
     }
 }
-class Time extends React.Component<any,any>{
 
+interface TimerProps {
+    time: number
+    signalReturn: () => void
+}
+
+interface TimerState {
+    seconds: number
+}
+
+class Timer extends React.Component<TimerProps, TimerState> {
     constructor(props) {
         super(props);
-        this.state={
-            second: 10
-        }
+        this.state = ({
+            seconds: this.props.time
+        })
     }
+
+    render() {
+        return (
+            <div className="timer">
+                <p>{this.state.seconds}</p>
+            </div>
+        );
+    }
+
     componentDidMount() {
-        var intervalID=setInterval(this.countDown.bind(this),1000);
-
-    }
-    componentWillUnmount(){
-        clearInterval(this.state.intervalID);
+        this._timeout(this.state.seconds)
     }
 
-    // đếm thời gian
-    timesetting = ()=>{
-        var newSecond=this.state.second-1;
-        if(newSecond>= -1){
-            this.setState({second:newSecond});
-        }else {
-            clearInterval(this.state.intervalID);
+    componentWillReceiveProps(nextProps: Readonly<TimerProps>, nextContext: any): void {
+        let time = nextProps.time;
+        if (this.props.time != time) {
+            this.setState({seconds:time})
+            this._timeout(time);
         }
     }
 
-    countDown=()=>{
-
-    this.timesetting();
-        if(this.state.second == 0) {
-            this.timesetting();
-            if (this.props.red == colors.red) {
-                this.setState(
-                    {second: 10}
-                )
-            } else if (this.props.green == colors.green)
-            {
-                this.setState(
-                    {second: 8}
-                )
-            } else if(this.props.yellow == colors.yellow){
-                this.setState(
-                    {second: 2}
-                )
+    _timeout(time) {
+        let seconds = time;
+        let myInterval = setInterval(() => {
+            if (seconds > 0) {
+                this.setState({seconds})
+            } else {
+                clearInterval(myInterval);
+                this.props.signalReturn();
+                this.setState({seconds: 0})
             }
-
-        }
-
+            seconds--;
+        }, 1000)
     }
+}
 
-    render() {
-        return (
-            <div className="time"><p>{this.state.second}</p>
-            </div>
-        );
-    }
+interface LightProps {
+    isLightOn: boolean,
 
 }
-class Light extends React.Component<any, any>{
-  constructor(props) {
-      super(props);
-  }
 
+class Light extends React.Component<LightProps, any> {
+    constructor(props) {
+        super(props);
 
+    }
 
-
-
+    lightOn = "RedLight"
+    lightOff = "GreyLight"
 
     render() {
-        return (
-            <div className="light" >
-          <Circle colors={this.props.red}/>
-          <Circle colors={this.props.yellow}/>
-          <Circle colors={this.props.green}/>
-          
+        let mau = this.props.isLightOn ? this.lightOn : this.lightOff;
+        return (<view className={mau}/>
 
-            </div>
         );
     }
 }
+class RedLight extends Light {
+    lightOn = "RedLight"
+}
+class GreenLight extends Light {
+    lightOn = "GreenLight"
+}
+class YellowLight extends Light {
+    lightOn = "YellowLight"
+}
+
 
